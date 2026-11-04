@@ -12,7 +12,7 @@ N      <- if (length(a) >= 1 && !is.na(a[1])) a[1] else 160   # polish/eval popu
 M      <- if (length(a) >= 2 && !is.na(a[2])) a[2] else 700   # LHS scan points
 K      <- if (length(a) >= 3 && !is.na(a[3])) a[3] else 4     # basins to polish
 MAXIT  <- if (length(a) >= 4 && !is.na(a[4])) a[4] else 160
-NFAST  <- 90
+NFAST  <- 130
 np <- length(FIT_PARS)
 cat(sprintf("Calibration: N=%d M=%d K=%d maxit=%d threads=%d (%d params)\n", N, M, K, MAXIT, QSP_THREADS, np))
 

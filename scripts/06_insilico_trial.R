@@ -17,7 +17,7 @@ for (arm in ARMS) {
   vp  <- gen_vpop(par, POOL, seed = SEED + match(arm, ARMS))   # independent pools
   res <- simulate_arm(par, arm, vp, cores = QSP_THREADS)
   pfs <- vapply(res, function(r) pfs_event(r$times, r$sld), numeric(1))
-  pool[[arm]] <- data.table(resp = vapply(res, function(r) best_response(r$sld), numeric(1)),
+  pool[[arm]] <- data.table(resp = vapply(res, function(r) best_response(r$times, r$sld), numeric(1)),
                             pfs_days = ifelse(is.na(pfs), HORIZON_D, pfs),
                             ev = as.integer(!is.na(pfs)))
   cat(sprintf("  pool %-10s ORR=%.1f%% medPFS~%.1f mo\n", arm,

@@ -16,7 +16,7 @@ out <- list(); traj <- list(); summ <- list()
 for (arm in ARMS) {
   res <- simulate_arm(par, arm, vp, cores = QSP_THREADS)
   n <- length(res)
-  resp  <- vapply(res, function(r) best_response(r$sld), numeric(1))
+  resp  <- vapply(res, function(r) best_response(r$times, r$sld), numeric(1))
   nadir <- vapply(res, function(r) min(r$sld), numeric(1))
   pfs   <- vapply(res, function(r) pfs_event(r$times, r$sld), numeric(1))
   ev    <- as.integer(!is.na(pfs)); tt <- ifelse(is.na(pfs), HORIZON_D, pfs)

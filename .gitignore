@@ -5,3 +5,7 @@ logs/*.log
 .Rproj.user/
 REPORT.html
 REPORT_files/
+
+# compiled C artifacts (auto-built from kras_rhs.c by R/config.R)
+R/*.so
+R/*.o

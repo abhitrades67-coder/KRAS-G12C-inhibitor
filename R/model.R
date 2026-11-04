@@ -82,6 +82,15 @@ make_p <- function(par, drv) {
   p
 }
 
+# Parameter vector for the compiled C RHS (order MUST match kras_rhs.c).
+make_cpar <- function(par, drv) {
+  p <- make_p(par, drv)
+  c(p$kact_base, p$kgap, p$Kd_sig, p$P0, p$fb, p$kfb, p$kprog, p$kprog_doce,
+    p$kdeg, p$ksyn, p$kcov_eff, p$cn, p$kprol, p$kdeath0, p$kkill, p$dep,
+    p$bypass, p$kres, p$doce_res, p$edir_amp)
+}
+COUT <- c("S","Ss","a","edir","occ","res")   # yout names from kras_rhs.c
+
 # initial state at baseline (pre-treatment steady state)
 init_state <- function(par) {
   fr0 <- clip(par[["fr0"]], 1e-4, 0.95)
@@ -97,8 +106,14 @@ simulate_patient <- function(par, drv, times = ASSESS_GRID, fine = FALSE) {
   # all arms are smooth: coarse grid, denser early to resolve initial response kinetics.
   tt <- sort(unique(c(seq(0, min(126, max(times)), by = 7), seq(0, max(times), by = 21), times)))
   out <- tryCatch(
-    as.data.frame(ode(y0, tt, function(t, y, pp) qsp_rhs(t, y, pp), p,
-                      method = "lsoda", rtol = 1e-6, atol = 1e-8)),
+    if (isTRUE(KRAS_DLL_OK)) {
+      as.data.frame(ode(y0, tt, func = "derivs", parms = make_cpar(par, drv),
+                        dllname = "kras_rhs", initfunc = "initmod", nout = 6, outnames = COUT,
+                        method = "lsoda", rtol = 1e-5, atol = 1e-7))
+    } else {
+      as.data.frame(ode(y0, tt, function(t, y, pp) qsp_rhs(t, y, pp), p,
+                        method = "lsoda", rtol = 1e-5, atol = 1e-7))
+    },
     error = function(e) NULL)
   if (is.null(out) || any(!is.finite(out$Ts)) || any(!is.finite(out$Tr))) return(NULL)
   dt <- as.data.table(out)

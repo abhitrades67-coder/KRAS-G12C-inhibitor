@@ -35,12 +35,37 @@ HORIZON_D     <- 540           # ~18 months follow-up
 ASSESS_EVERY  <- 42            # RECIST assessment interval (6 weeks), CodeBreaK/KRYSTAL-like
 ASSESS_GRID   <- seq(0, HORIZON_D, by = ASSESS_EVERY)
 
+# Progression timing is evaluated on a finer grid than the q6w scan schedule so the median PFS
+# is not quantised to 6-week steps (which makes the calibration metric unstable); objective
+# response stays on the clinical q6w confirmed-RECIST basis.
+PFS_GRID  <- seq(0, HORIZON_D, by = 14)
+MET_GRID  <- sort(unique(c(ASSESS_GRID, PFS_GRID)))
+
 # --- RECIST thresholds (on sum of longest diameters, SLD, % of baseline) ---
 RECIST_PR <- 70    # <=70% of baseline  => >=30% reduction  => (partial) response
 RECIST_PD_REL <- 1.20  # >=20% increase over nadir
 RECIST_PD_ABS <- 5     # plus a small absolute increase (percentage points of baseline)
 
-cat(sprintf("config.R loaded. PROJ=%s  threads=%d  seed=%d\n", PROJ, QSP_THREADS, SEED))
+# compiled C right-hand side (≈7x faster); auto-builds from kras_rhs.c if needed, and R falls
+# back to the interpreted qsp_rhs if the build is unavailable.
+KRAS_DLL_OK <- FALSE
+local({
+  src <- file.path(DIR_R, "kras_rhs.c")
+  so  <- file.path(DIR_R, paste0("kras_rhs", .Platform$dynlib.ext))
+  if (!file.exists(src)) return(invisible())
+  if (!file.exists(so) || file.info(so)$mtime < file.info(src)$mtime) tryCatch({
+    owd <- setwd(DIR_R); on.exit(setwd(owd))
+    system2(file.path(R.home("bin"), "R"), c("CMD", "SHLIB", "kras_rhs.c"),
+            stdout = FALSE, stderr = FALSE)
+  }, error = function(e) message("kras_rhs build failed: ", conditionMessage(e)))
+  if (file.exists(so)) tryCatch({
+    if (!("kras_rhs" %in% names(getLoadedDLLs()))) dyn.load(so)
+    KRAS_DLL_OK <<- TRUE
+  }, error = function(e) message("could not load kras_rhs DLL: ", conditionMessage(e)))
+})
+
+cat(sprintf("config.R loaded. PROJ=%s  threads=%d  seed=%d  C-RHS=%s\n",
+            PROJ, QSP_THREADS, SEED, KRAS_DLL_OK))
 
 # small helpers ---------------------------------------------------------------
 `%||%` <- function(a, b) if (is.null(a) || length(a) == 0 || (length(a)==1 && is.na(a))) b else a

@@ -4,23 +4,33 @@
 suppressWarnings(suppressMessages(library(survival)))
 DAYS_PER_MONTH <- 30.4375
 
-# confirmed objective response (1 = PR/CR): SLD <= RECIST_PR % of baseline at two
-# consecutive assessments (RECIST confirmation). This keeps durable responses and
-# discards the transient between-cycle dips of pulsatile chemotherapy.
-best_response <- function(sld) {
-  resp <- sld <= RECIST_PR
-  if (length(resp) >= 2 && any(resp[-length(resp)] & resp[-1], na.rm = TRUE)) return(1L)
-  # allow an unconfirmable response only if it is the final assessment and sustained
-  0L
+# confirmed objective response (1 = PR/CR): SLD <= RECIST_PR % of baseline at two consecutive
+# q6w assessments (RECIST confirmation) -- discards transient chemotherapy dips. Evaluated on the
+# clinical q6w scan grid (ASSESS_GRID) regardless of how finely the trajectory was sampled.
+best_response <- function(times, sld) {
+  k <- times %in% ASSESS_GRID
+  resp <- sld[k][order(times[k])] <= RECIST_PR
+  as.integer(length(resp) >= 2 && any(resp[-length(resp)] & resp[-1], na.rm = TRUE))
 }
 
-# time to RECIST progression on the assessment grid (days); NA if none by horizon
+# time to RECIST progression (days); NA if none by horizon. Progression timing is read on the
+# finer PFS grid and the exact crossing time is linearly interpolated, so the median PFS is not
+# quantised to the 6-week scan step (which otherwise makes the calibration metric unstable).
 pfs_event <- function(times, sld) {
-  nadir <- sld[1]                       # starts at baseline (100)
-  for (i in seq_along(times)[-1]) {
-    nadir <- min(nadir, sld[i - 1])
-    if (sld[i] >= RECIST_PD_REL * nadir && sld[i] >= nadir + RECIST_PD_ABS)
-      return(times[i])
+  k <- times %in% PFS_GRID; tt <- times[k]; ss <- sld[k]
+  o <- order(tt); tt <- tt[o]; ss <- ss[o]
+  nadir <- ss[1]
+  for (i in seq_along(tt)[-1]) {
+    nadir <- min(nadir, ss[i - 1])
+    thr <- max(RECIST_PD_REL * nadir, nadir + RECIST_PD_ABS)
+    if (ss[i] >= thr) {
+      # interpolate the crossing time between the previous and current grid point
+      if (ss[i] > ss[i - 1]) {
+        frac <- (thr - ss[i - 1]) / (ss[i] - ss[i - 1])
+        return(tt[i - 1] + clip(frac, 0, 1) * (tt[i] - tt[i - 1]))
+      }
+      return(tt[i])
+    }
   }
   NA_real_
 }
@@ -54,7 +64,7 @@ simulate_arm <- function(par, arm, vpop, cores = QSP_THREADS) {
   f <- function(v) {
     drv <- arm_drive(arm, v$par, pk_factor = v$pk_factor, kcov_factor = v$kcov_factor,
                      doce_factor = v$doce_factor %||% 1)
-    dt  <- simulate_patient(v$par, drv)
+    dt  <- simulate_patient(v$par, drv, times = MET_GRID)   # q6w + finer PFS grid
     if (is.null(dt)) return(NULL)
     list(sld = dt$SLD, times = dt$time, occ = dt$occ, S = dt$S)
   }
@@ -67,7 +77,7 @@ simulate_arm <- function(par, arm, vpop, cores = QSP_THREADS) {
 summarise_arm <- function(par, arm, vpop, cores = QSP_THREADS) {
   res <- simulate_arm(par, arm, vpop, cores)
   n <- length(res); if (n == 0) return(list(ORR = NA, medPFS = NA, occ = NA, n = 0))
-  resp <- vapply(res, function(r) best_response(r$sld), numeric(1))
+  resp <- vapply(res, function(r) best_response(r$times, r$sld), numeric(1))
   pfs  <- vapply(res, function(r) pfs_event(r$times, r$sld), numeric(1))
   ev   <- as.integer(!is.na(pfs))
   tt   <- ifelse(is.na(pfs), HORIZON_D, pfs)

@@ -14,9 +14,9 @@ run_scen <- function(label, arm, dose_factor = 1, fb_scale = 1) {
   res <- lapply(vpl, function(v) {
     drv <- arm_drive(arm, v$par, pk_factor = v$pk_factor, dose_factor = dose_factor,
                      kcov_factor = v$kcov_factor, doce_factor = v$doce_factor)
-    simulate_patient(v$par, drv) })
+    simulate_patient(v$par, drv, times = MET_GRID) })
   res <- res[!vapply(res, is.null, logical(1))]
-  resp <- vapply(res, function(r) best_response(r$SLD), numeric(1))
+  resp <- vapply(res, function(r) best_response(r$time, r$SLD), numeric(1))
   pfs  <- vapply(res, function(r) pfs_event(r$time, r$SLD), numeric(1))
   ev   <- as.integer(!is.na(pfs)); tt <- ifelse(is.na(pfs), HORIZON_D, pfs)
   med  <- tryCatch(unname(summary(survfit(Surv(tt,ev)~1))$table["median"])/DAYS_PER_MONTH,

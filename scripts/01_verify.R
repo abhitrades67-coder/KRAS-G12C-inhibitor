@@ -51,12 +51,14 @@ f_tight <- function() { environment(qsp_rhs); as.data.frame(deSolve::ode(
 tight <- 100 * (f_tight()$Ts[2] + f_tight()$Tr[2])
 add("integrator tolerance-stable", abs(loose - tight) < 0.5, sprintf("|d|=%.3f", abs(loose - tight)))
 
-# 8. PFS/response logic unit tests on synthetic series.
+# 8. PFS/response logic unit tests on synthetic series (times on the q6w/PFS grids).
+tq <- c(0, 42, 84, 126)
 add("response logic: deep+confirmed = PR",
-    best_response(c(100, 50, 45, 40)) == 1 && best_response(c(100, 60, 90, 95)) == 0, "")
-add("PFS logic: +20% over nadir triggers",
-    pfs_event(c(0,42,84,126), c(100, 50, 55, 62)) == 126 &&
-    is.na(pfs_event(c(0,42,84), c(100, 80, 70))), "")
+    best_response(tq, c(100, 50, 45, 40)) == 1 && best_response(tq, c(100, 60, 90, 95)) == 0, "")
+pp <- pfs_event(tq, c(100, 50, 55, 62))     # crosses nadir(50)+20%=60 between 84 and 126
+add("PFS logic: +20% over nadir triggers (interpolated)",
+    is.finite(pp) && pp > 84 && pp <= 126 && is.na(pfs_event(c(0,42,84), c(100, 80, 70))),
+    sprintf("t=%.0f", pp))
 
 res <- rbindlist(chk)
 fwrite(res, file.path(DIR_RESULTS, "verification.csv"))
