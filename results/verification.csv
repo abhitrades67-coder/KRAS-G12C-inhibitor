@@ -1,0 +1,12 @@
+check,pass,detail
+baseline protein ~1,TRUE,=1.0000
+baseline occupancy 0,TRUE,=0.00e+00
+baseline signal S~1,TRUE,=1.00000
+untreated growth = net rate,TRUE,net=0.0060/day
+states finite & non-negative,TRUE,""
+occupancy increases with exposure,TRUE,0.66 -> 0.91
+nadir deepens with dose,TRUE,77.6 vs 99.4
+feedback raises U under drug,TRUE,U=2.61
+integrator tolerance-stable,TRUE,|d|=0.000
+response logic: deep+confirmed = PR,TRUE,""
+PFS logic: +20% over nadir triggers (interpolated),TRUE,t=114
