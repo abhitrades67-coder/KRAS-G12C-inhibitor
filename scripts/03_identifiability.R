@@ -7,7 +7,7 @@
 source("R/setup.R"); source("R/calibrate.R")
 suppressWarnings(suppressMessages(library(numDeriv)))
 fit <- readRDS(file.path(DIR_RESULTS, "fit.rds")); best <- fit$best
-N <- 220
+N <- 150
 cat("Identifiability at the fitted optimum (N =", N, ")\n")
 
 # objective as negative log-likelihood: g = sum w z^2 = 2*NLL  =>  cov ~ 2 * inv(Hessian(g))

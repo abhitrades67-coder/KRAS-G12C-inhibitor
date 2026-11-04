@@ -8,7 +8,7 @@
 # Usage: Rscript scripts/04_validate.R
 source("R/setup.R"); source("R/calibrate.R")
 fit <- readRDS(file.path(DIR_RESULTS, "fit.rds")); best <- fit$best
-N <- 180; Nval <- 400
+N <- 140; Nval <- 350
 shared <- c("fb","kkill","dep","bypass","fr0","kres")
 ownpar <- list(sotorasib = "kcov_soto", adagrasib = "kcov_adag", docetaxel = "kkill_doce")
 dkeys  <- list(sotorasib = c("soto_ORR","soto_PFS","soto_occ"),
@@ -18,7 +18,7 @@ dkeys  <- list(sotorasib = c("soto_ORR","soto_PFS","soto_occ"),
 refit <- function(free, keys, start) {
   fn <- function(x) { th <- best; th[free] <- pmin(FIT_UB[free], pmax(FIT_LB[free], x))
                       calib_objective_sub(th, keys, N = N) }
-  op <- optim(start[free], fn, method = "Nelder-Mead", control = list(maxit = 80, reltol = 1e-4))
+  op <- optim(start[free], fn, method = "Nelder-Mead", control = list(maxit = 60, reltol = 1e-3))
   th <- best; th[free] <- pmin(FIT_UB[free], pmax(FIT_LB[free], op$par)); th
 }
 
