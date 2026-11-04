@@ -31,7 +31,7 @@ if (!is.null(H) && all(is.finite(H))) {
   d <- diag(cov); se <- ifelse(d > 0, sqrt(d), NA_real_)
   sdinv <- ifelse(is.na(se) | se <= 0, 0, 1/se)
   cormat <- diag(sdinv) %*% cov %*% diag(sdinv)
-  cormat <- pmin(1, pmax(-1, cormat))        # valid correlations in [-1,1]
+  cormat[] <- pmin(1, pmax(-1, cormat))      # valid correlations in [-1,1] (keep matrix dims)
   diag(cormat) <- 1; dimnames(cormat) <- list(FIT_PARS, FIT_PARS)
   if (illcond) cat("NOTE: Hessian is ill-conditioned; some directions are weakly identified",
                    "(regularised to nearest PD; affected SEs are approximate).\n")
