@@ -45,7 +45,7 @@ res <- data.table(parameter = sens_pars)
 for (out in colnames(Y)) res[[out]] <- round(prcc(X, Y[, out]), 3)
 # approximate significance band for |PRCC| (n-dependent)
 res$signif_band <- round(2 / sqrt(nrow(X)), 3)
-setorder(res, -abs(soto_PFS))
+res <- res[order(-abs(res$soto_PFS))]
 fwrite(res, file.path(DIR_RESULTS, "sensitivity_prcc.csv"))
 fwrite(as.data.table(cbind(X, Y)), file.path(DIR_RESULTS, "sensitivity_samples.csv"))
 cat("\n== PRCC (|value| > signif_band is influential) ==\n"); print(res)
