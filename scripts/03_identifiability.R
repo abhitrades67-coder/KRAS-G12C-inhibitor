@@ -16,13 +16,25 @@ cat("Computing Hessian (may take a few minutes)...\n")
 H <- tryCatch(hessian(g, best, method.args = list(eps = 1e-3, d = 0.02, r = 2)),
               error = function(e) NULL)
 
-se <- rep(NA_real_, length(best)); cormat <- NULL
+se <- rep(NA_real_, length(best)); cormat <- NULL; illcond <- FALSE
 if (!is.null(H) && all(is.finite(H))) {
   Hs <- (H + t(H)) / 2
-  cov <- tryCatch(2 * solve(Hs), error = function(e) 2 * MASS::ginv(Hs))
+  ev <- eigen(Hs, symmetric = TRUE, only.values = TRUE)$values
+  illcond <- min(ev) <= 0 || (max(ev) / max(min(abs(ev)), 1e-12)) > 1e8
+  # regularise to the nearest positive-definite matrix before inverting (the raw numerical
+  # Hessian can be indefinite along near-flat/confounded directions, which otherwise yields
+  # invalid |correlation|>1); flag those directions as non-identifiable.
+  lam <- pmax(ev, max(ev) * 1e-6)
+  E <- eigen(Hs, symmetric = TRUE)
+  Hpd <- E$vectors %*% diag(lam) %*% t(E$vectors)
+  cov <- tryCatch(2 * solve(Hpd), error = function(e) 2 * MASS::ginv(Hpd))
   d <- diag(cov); se <- ifelse(d > 0, sqrt(d), NA_real_)
-  sdinv <- ifelse(is.na(se), 0, 1/se); cormat <- diag(sdinv) %*% cov %*% diag(sdinv)
-  dimnames(cormat) <- list(FIT_PARS, FIT_PARS)
+  sdinv <- ifelse(is.na(se) | se <= 0, 0, 1/se)
+  cormat <- diag(sdinv) %*% cov %*% diag(sdinv)
+  cormat <- pmin(1, pmax(-1, cormat))        # valid correlations in [-1,1]
+  diag(cormat) <- 1; dimnames(cormat) <- list(FIT_PARS, FIT_PARS)
+  if (illcond) cat("NOTE: Hessian is ill-conditioned; some directions are weakly identified",
+                   "(regularised to nearest PD; affected SEs are approximate).\n")
 }
 
 prior_w <- (FIT_UB - FIT_LB)[FIT_PARS]

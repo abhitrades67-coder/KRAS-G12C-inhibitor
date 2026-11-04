@@ -1,0 +1,8 @@
+Structural / a-priori identifiability notes:
+- Covalent potency (kcov_*) and free-exposure scale are only jointly identified; the exposure
+  scale (Cref) is fixed from PK so kcov_* carries the engagement efficiency.
+- Effect-site partition is not identifiable from these endpoints; effect-site = free plasma (fixed).
+- kprol and kdeath0 trade off in the net growth rate; only the net rate is informed, so both are
+  fixed from natural-history doubling time and only drug/resistance parameters are estimated.
+- A full differential-algebra structural analysis is out of scope; practical identifiability is
+  assessed here by the Hessian covariance, prior->posterior shrinkage and the objective profiles.

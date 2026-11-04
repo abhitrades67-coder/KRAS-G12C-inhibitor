@@ -50,7 +50,7 @@ md <- c(md, "## Table 6. Global sensitivity (PRCC)", "", tbl(sp), "")
 
 # 7. Validation
 vl <- rd("validation.csv")
-if (!is.null(vl)) vl <- vl[, .(scheme, held_out, key, observed, predicted, abs_err, pass)]
+if (!is.null(vl)) vl <- vl[, .(scheme, held_out, target, observed, predicted, abs_err, pass)]
 md <- c(md, "## Table 7. Out-of-sample validation", "", tbl(vl), "")
 
 # 8. Scenarios

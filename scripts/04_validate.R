@@ -32,7 +32,7 @@ for (d in names(dkeys)) {
   pred <- predict_endpoints(par, N = Nval, seed = SEED + 7, cores = QSP_THREADS)
   for (k in dkeys[[d]]) {
     obs <- TARGETS[tkey == k]$value
-    lodo[[length(lodo)+1]] <- data.table(scheme = "LODO", held_out = d, key = k,
+    lodo[[length(lodo)+1]] <- data.table(scheme = "LODO", held_out = d, target = k,
       metric = TARGETS[tkey==k]$metric, observed = obs, predicted = round(pred[[k]],2),
       abs_err = round(abs(pred[[k]] - obs), 2))
   }
@@ -49,10 +49,10 @@ par_t <- assemble_par(th_t)
 pred_t<- predict_endpoints(par_t, N = Nval, seed = SEED + 8, cores = QSP_THREADS)
 temp <- rbindlist(lapply(TARGETS[metric == "PFS"]$tkey, function(k) {
   obs <- TARGETS[tkey==k]$value
-  data.table(scheme = "TEMPORAL(fit ORR->predict PFS)", held_out = "all PFS", key = k,
+  data.table(scheme = "TEMPORAL(fit ORR->predict PFS)", held_out = "all PFS", target = k,
              metric = "PFS", observed = obs, predicted = round(pred_t[[k]],2),
              abs_err = round(abs(pred_t[[k]] - obs),2)) }))
-print(temp[, .(key, observed, predicted, abs_err)])
+print(temp[, .(target, observed, predicted, abs_err)])
 
 val <- rbind(lodo_dt, temp)
 val[, pass := ifelse(metric == "ORR", abs_err <= 10, ifelse(metric == "PFS", abs_err <= 1.5, abs_err <= 0.1))]
