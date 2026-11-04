@@ -7,7 +7,7 @@ ROOT <- normalizePath(dirname(sub("^--file=", "", grep("^--file=", commandArgs(F
 RSCRIPT <- file.path(R.home("bin"), "Rscript")
 STEPS <- list(
   c("01_verify",        "scripts/01_verify.R"),
-  c("02_calibrate",     "scripts/02_calibrate.R 150 30 20 120"),
+  c("02_calibrate",     "scripts/02_calibrate.R 160 700 4 160"),
   c("03_identifiability","scripts/03_identifiability.R"),
   c("05_vpop",          "scripts/05_vpop.R 1000"),
   c("06_insilico",      "scripts/06_insilico_trial.R 4000 300 500"),

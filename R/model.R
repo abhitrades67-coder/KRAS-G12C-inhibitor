@@ -1,12 +1,14 @@
 # model.R — the QSP right-hand side and single-patient simulator.
 #
-# State (5 slow variables; sub-daily PK is averaged to steady-state exposure, which is
+# State (6 slow variables; sub-daily PK is averaged to steady-state exposure, which is
 # appropriate for the monthly ORR/PFS endpoints and keeps the system non-stiff):
-#   Rnc  non-covalent KRAS G12C protein      (baseline 1)
-#   Rb   covalently drug-bound KRAS G12C      (baseline 0)
-#   U    adaptive upstream input (RTK/SOS/SHP2, feedback-controlled, baseline 1)
-#   Ts   sensitive tumour burden             (baseline 1-fr0)
-#   Tr   resistant tumour burden             (baseline fr0)
+#   Rnc    non-covalent KRAS G12C protein      (baseline 1)
+#   Rb     covalently drug-bound KRAS G12C     (baseline 0)
+#   U      adaptive upstream input (RTK/SOS/SHP2, feedback-controlled, baseline 1)
+#   res    acquired adaptive resistance in [0,1) (baseline 0) -> sensitive clone loses drug
+#          suppression over weeks-to-months while engaged, driving acquired progression
+#   Ts     sensitive tumour burden             (baseline 1-fr0)
+#   Tr     resistant tumour burden             (baseline fr0)
 #
 # Drive per arm (a list `drv`):
 #   cn       normalised free exposure of the G12C drug (1 = approved dose)
@@ -18,8 +20,9 @@
 # through its suppression, death. Feedback raises U when S < 1 (reactivation).
 
 qsp_rhs <- function(t, y, p) {
-  Rnc <- y[["Rnc"]]; Rb <- y[["Rb"]]; U <- y[["U"]]; Ts <- y[["Ts"]]; Tr <- y[["Tr"]]
-  Rnc <- max(Rnc, 0); Ts <- max(Ts, 0); Tr <- max(Tr, 0); U <- max(U, 0)
+  Rnc <- y[["Rnc"]]; Rb <- y[["Rb"]]; U <- y[["U"]]; res <- y[["res"]]
+  Ts <- y[["Ts"]]; Tr <- y[["Tr"]]
+  Rnc <- max(Rnc, 0); Ts <- max(Ts, 0); Tr <- max(Tr, 0); U <- max(U, 0); res <- clip(res, 0, 1)
 
   # active fraction among non-covalent protein (fast nucleotide-cycle QSS)
   a  <- (p$kact_base * U) / (p$kact_base * U + p$kgap)
@@ -36,28 +39,33 @@ qsp_rhs <- function(t, y, p) {
 
   # target engagement ------------------------------------------------------
   capture <- p$kcov_eff * p$cn * Rg            # irreversible covalent capture of GDP pool
+  occ <- Rb / (Rnc + Rb + 1e-12)
   dRnc <- p$ksyn - p$kdeg * Rnc - capture
   dRb  <- capture - p$kdeg * Rb
 
-  # direct cytotoxic (docetaxel) effect: cycle-exposure-averaged daily kill (0 for G12C arms),
-  # endpoint-equivalent to the q3w pulse for q6w RECIST assessment and numerically smooth.
-  edir <- p$edir_amp
+  # acquired adaptive resistance (res in [0,1)): while the target is engaged, bypass/amplification
+  # accumulates and the sensitive clone's EFFECTIVE pathway signal returns toward baseline, so the
+  # drug's hold wanes over weeks-to-months and the tumour re-grows. kprog sets the timescale (PFS).
+  dres <- p$kprog * occ * (1 - res)
 
-  # tumour: two clones differing in KRAS-pathway dependence d ---------------
-  #   growth = kprol*(d*S + 1-d) - [kdeath0 + kkill*d*(1-S) + edir]
-  #   d high  -> addicted: proliferation collapses and apoptosis rises as S falls (response)
-  #   d low   -> independent: keeps growing despite pathway suppression   (primary/acquired resistance)
-  ds <- p$dep                      # sensitive-clone dependence
-  dr <- p$dep * (1 - p$bypass)     # resistant-clone dependence (escaped)
-  # the resistant clone is broadly drug-tolerant: it escapes G12C-pathway suppression
-  # AND the cytotoxic (docetaxel) kill, so it regrows and drives progression on every arm.
-  gS <- p$kprol * (ds * S + (1 - ds)) - (p$kdeath0 + p$kkill * ds * (1 - S) + edir)
-  gR <- p$kprol * (dr * S + (1 - dr)) - (p$kdeath0 + p$kkill * dr * (1 - S) + edir * p$doce_res)
+  # direct cytotoxic (docetaxel) effect (0 for G12C arms), waning over time as chemoresistance
+  # develops (short, non-durable benefit -> shorter PFS than targeted therapy).
+  edir <- p$edir_amp * exp(-p$kprog_doce * t)
+
+  # tumour: two clones. The sensitive clone is KRAS-addicted (dependence dep) and ACQUIRES
+  # resistance over time (its effective signal Ss returns to baseline as res->1). The resistant
+  # clone carries PRE-EXISTING bypass (effective signal Sr stays high) and is only weakly touched
+  # by chemotherapy. Growth = kprol*(d*Se + 1-d) - [kdeath0 + kkill*d*(1-Se) + kill].
+  d  <- p$dep
+  Ss <- clip(S + (1 - S) * res,      0, 1.6)   # sensitive: suppression lost as res grows
+  Sr <- clip(S + (1 - S) * p$bypass, 0, 1.6)   # resistant: pre-existing bypass
+  gS <- p$kprol * (d * Ss + (1 - d)) - (p$kdeath0 + p$kkill * d * (1 - Ss) + edir)
+  gR <- p$kprol * (d * Sr + (1 - d)) - (p$kdeath0 + p$kkill * d * (1 - Sr) + edir * p$doce_res)
   dTs <- gS * Ts - p$kres * Ts
   dTr <- gR * Tr + p$kres * Ts
 
-  list(c(Rnc = dRnc, Rb = dRb, U = dU, Ts = dTs, Tr = dTr),
-       S = S, a = a, edir = edir, occ = Rb / (Rnc + Rb + 1e-12))
+  list(c(Rnc = dRnc, Rb = dRb, U = dU, res = dres, Ts = dTs, Tr = dTr),
+       S = S, Ss = Ss, a = a, edir = edir, occ = occ, res = res)
 }
 
 # Build a fully-resolved parameter environment for one patient/arm.
@@ -77,7 +85,7 @@ make_p <- function(par, drv) {
 # initial state at baseline (pre-treatment steady state)
 init_state <- function(par) {
   fr0 <- clip(par[["fr0"]], 1e-4, 0.95)
-  c(Rnc = 1, Rb = 0, U = 1, Ts = 1 - fr0, Tr = fr0)
+  c(Rnc = 1, Rb = 0, U = 1, res = 0, Ts = 1 - fr0, Tr = fr0)
 }
 
 # Simulate one patient on one arm. Returns a data.table at the requested times (default the

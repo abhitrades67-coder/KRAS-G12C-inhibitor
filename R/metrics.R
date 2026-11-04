@@ -45,7 +45,7 @@ gen_vpop <- function(par, N, seed = SEED) {
     list(par = pi,
          pk_factor   = lognf(0.25, pkZ[i]),             # G12C exposure heterogeneity
          kcov_factor = lognf(POP_CV["kcov"], Z[i,"kcov"]),
-         doce_factor = lognf(0.30, dcZ[i]))             # docetaxel chemo-sensitivity heterogeneity
+         doce_factor = lognf(0.20, dcZ[i]))             # docetaxel chemo-sensitivity heterogeneity
   })
 }
 

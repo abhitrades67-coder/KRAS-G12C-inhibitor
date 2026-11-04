@@ -60,33 +60,35 @@ PAR0 <- c(
   # => baseline active fraction a0 = 16/(16+24) = 0.40
   Kd_sig    = 0.25,     # signalling half-saturation (in active-pool units)
   # --- adaptive feedback ---
-  fb        = 1.6,      # FIT: feedback strength (ERK-relief -> upstream input)
+  fb        = 2.6,      # FIT: feedback strength (ERK-relief -> upstream input)
   kfb       = 0.6,      # /day, feedback adaptation rate (reactivation over days)
+  kprog     = 0.007,    # FIT: /day acquired adaptive-resistance rate (sets duration of benefit)
   # --- covalent capture efficiency (per drug), at reference exposure ---
-  kcov_soto = 8.0,      # FIT: /day sotorasib covalent capture at Cref
-  kcov_adag = 13.0,     # FIT: /day adagrasib covalent capture at Cref
+  kcov_soto = 14.0,      # FIT: /day sotorasib covalent capture at Cref
+  kcov_adag = 22.0,     # FIT: /day adagrasib covalent capture at Cref
   # --- tumour kinetics ---
-  kprol     = 0.027,    # /day max proliferation (at S=1)
+  kprol     = 0.026,    # /day max proliferation (at S=1)
   kdeath0   = 0.020,    # /day baseline death  => net untreated growth +0.007/day (doubling ~100 d)
   doce_res  = 0.35,     # fraction of docetaxel kill the resistant clone still receives
-  kkill     = 0.026,    # FIT: /day max ERK-suppression-driven death (in addicted cells)
-  dep       = 0.45,     # FIT: KRAS-pathway dependence of sensitive cells (oncogene addiction)
+  kkill     = 0.032,    # FIT: /day max ERK-suppression-driven death (in addicted cells)
+  dep       = 0.33,     # FIT: KRAS-pathway dependence of sensitive cells (oncogene addiction)
   # --- resistance ---
-  bypass    = 0.90,     # FIT: de-dependence of resistant clones (near-complete escape)
-  fr0       = 0.10,     # FIT: pre-existing resistant fraction of tumour
-  kres      = 0.010,    # FIT: /day acquired resistance (sensitive->resistant conversion)
-  # --- docetaxel comparator (pulsatile q3w) ---
-  kkill_doce= 0.0088,    # FIT: docetaxel mean daily kill coefficient (per unit normalised exposure)
-  kel_doce  = 1.51,     # /day effective elimination (t1/2 ~11 h) for the q3w pulse
-  tau_doce  = 21        # day dosing cycle
+  bypass    = 0.85,     # FIT: de-dependence of resistant clones (near-complete escape)
+  fr0       = 0.06,     # FIT: pre-existing resistant fraction of tumour
+  kres      = 0.004,    # FIT: /day acquired resistance (sensitive->resistant conversion)
+  # --- docetaxel comparator ---
+  kkill_doce= 0.009,    # FIT: docetaxel mean daily kill coefficient (per unit normalised exposure)
+  kprog_doce= 0.016,    # FIT: /day docetaxel chemoresistance (effect-waning) rate
+  kel_doce  = 1.51,     # /day effective elimination (legacy; unused in averaged mode)
+  tau_doce  = 21        # day dosing cycle (legacy; unused in averaged mode)
 )
 
 # parameters estimated in calibration (the rest are fixed by structure/priors)
-FIT_PARS <- c("fb", "kcov_soto", "kcov_adag", "kkill", "dep", "bypass", "fr0", "kres", "kkill_doce")
+FIT_PARS <- c("fb", "kprog", "kcov_soto", "kcov_adag", "kkill", "dep", "bypass", "fr0", "kres", "kkill_doce", "kprog_doce")
 
 # bounds for the fitted parameters
-FIT_LB <- c(fb=0.2, kcov_soto=2,  kcov_adag=2,  kkill=0.015, dep=0.15, bypass=0.50, fr0=0.02, kres=0.002, kkill_doce=0.003)
-FIT_UB <- c(fb=4.0, kcov_soto=40, kcov_adag=60, kkill=0.12,  dep=0.95, bypass=0.99, fr0=0.18, kres=0.020, kkill_doce=0.02)
+FIT_LB <- c(fb=0.2, kprog=0.002, kcov_soto=2,  kcov_adag=2,  kkill=0.015, dep=0.15, bypass=0.50, fr0=0.02, kres=0.002, kkill_doce=0.002, kprog_doce=0.004)
+FIT_UB <- c(fb=4.0, kprog=0.080, kcov_soto=40, kcov_adag=60, kkill=0.12,  dep=0.95, bypass=0.99, fr0=0.30, kres=0.020, kkill_doce=0.060, kprog_doce=0.050)
 
 # ---------------------------------------------------------------------------
 # 3. Population variability (for virtual patients). Lognormal multiplicative
@@ -117,8 +119,8 @@ TARGETS <- data.table(
   arm    = c("sotorasib","sotorasib","adagrasib","adagrasib","docetaxel","docetaxel","sotorasib"),
   metric = c("ORR","PFS","ORR","PFS","ORR","PFS","occupancy"),
   value  = c(37.1,      6.8,       43.0,      6.5,       13.2,      4.5,        0.90),
-  sd     = c(5.0,       1.0,       6.0,       1.2,       4.0,       0.8,        0.07),
-  w      = c(1.0,       1.0,       1.0,       1.0,       0.8,       0.8,        0.6),
+  sd     = c(5.0,       1.0,       6.0,       1.2,       6.0,       1.0,        0.07),
+  w      = c(1.0,       1.0,       1.0,       1.0,       0.6,       0.7,        0.6),
   source = c("CodeBreaK100","CodeBreaK100","KRYSTAL-1","KRYSTAL-1","CodeBreaK200","CodeBreaK200","translational")
 )
 
