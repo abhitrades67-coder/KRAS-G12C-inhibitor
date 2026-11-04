@@ -1,0 +1,7 @@
+logs/*.log
+*.Rout
+.Rhistory
+.RData
+.Rproj.user/
+REPORT.html
+REPORT_files/

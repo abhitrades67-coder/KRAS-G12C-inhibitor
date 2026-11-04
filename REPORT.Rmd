@@ -1,0 +1,107 @@
+---
+title: "A QSP model of covalent KRAS G12C inhibition in NSCLC"
+subtitle: "Target engagement, adaptive MAPK feedback, resistance, and comparative efficacy"
+date: "`r format(Sys.time(), '%Y-%m-%d')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+    theme: flatly
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, fig.align = "center")
+library(data.table)
+RES <- "results"; FIG <- "figures"
+rd <- function(f) if (file.exists(file.path(RES, f))) fread(file.path(RES, f)) else NULL
+img <- function(f) { p <- file.path(FIG, f); if (file.exists(p)) knitr::include_graphics(p) else invisible(NULL) }
+kab <- function(d, ...) if (!is.null(d)) knitr::kable(d, ...) else cat("_(not available)_")
+```
+
+# Summary
+
+This report documents a quantitative systems pharmacology (QSP) model of covalent KRAS G12C
+inhibition in previously treated KRAS G12C–mutant non–small-cell lung cancer. The model couples
+oral pharmacokinetics, covalent engagement of a cycling (GDP/GTP) target, a lumped MAPK pathway
+with adaptive ERK→upstream negative feedback, and a two-clone tumour (KRAS-dependent sensitive +
+drug-tolerant resistant). It is calibrated to the published response and progression-free-survival
+endpoints of sotorasib, adagrasib and docetaxel, then validated out-of-sample and used for in silico
+trials and dose/schedule/combination exploration.
+
+```{r headline, results='asis'}
+hl <- file.path(RES, "headline.txt"); if (file.exists(hl)) cat("```\n", paste(readLines(hl), collapse = "\n"), "\n```\n")
+```
+
+# Calibration
+
+```{r}
+img("fig01_calibration.png")
+kab(rd("calibration_targets_vs_pred.csv")[, .(tkey, arm, metric, observed=value, predicted=round(pred,2), z=round(resid,2), source)],
+    caption = "Model vs published anchors.")
+kab(rd("calibration_fit.csv"), caption = "Fitted parameters.")
+```
+
+# Target engagement, signalling and tumour dynamics
+
+The irreversible inhibitor captures GDP-bound KRAS G12C; ERK suppression releases the upstream brake,
+raising the activation input (adaptive reactivation). A typical sotorasib patient:
+
+```{r}
+img("fig05_target_engagement.png")
+```
+
+# Response and progression-free survival (virtual population)
+
+```{r}
+img("fig02_waterfall_sotorasib.png"); img("fig03_spider.png"); img("fig04_km_pfs.png")
+kab(rd("vpop_summary.csv"), caption = "Virtual-population outcomes.")
+```
+
+# In silico head-to-head trial
+
+```{r}
+img("fig08_insilico_hr.png")
+kab(rd("insilico_summary.csv"), caption = "Randomised in silico comparisons (median [95% CrI]).")
+```
+
+# Out-of-sample validation
+
+```{r}
+kab(rd("validation.csv"), caption = "Leave-one-drug-out and temporal validation; pass = within pre-specified tolerance.")
+```
+
+# Identifiability
+
+```{r}
+kab(rd("identifiability.csv"), caption = "Prior->posterior shrinkage and practical identifiability.")
+notes <- file.path(RES, "identifiability_notes.txt"); if (file.exists(notes)) cat("\n```\n", paste(readLines(notes), collapse="\n"), "\n```\n")
+```
+
+# Global sensitivity
+
+```{r}
+img("fig06_prcc.png")
+kab(rd("sensitivity_prcc.csv"), caption = "Partial rank correlation of outputs on parameters.")
+```
+
+# External benchmark (MBMA)
+
+```{r}
+img("fig09_benchmark.png")
+kab(rd("benchmark_orr.csv"), caption = "Mechanistic ORR vs cross-programme MBMA pool.")
+```
+
+# Scenario exploration
+
+```{r}
+img("fig07_scenarios.png")
+kab(rd("scenarios.csv"), caption = "Dose/schedule and feedback-blocking scenarios (in silico hypotheses).")
+```
+
+# Limitations
+
+Effect-site is free plasma; the MAPK cascade is lumped to one ppERK output; resistance is two
+compartments plus a pre-existing fraction, not an explicit mutational spectrum; calibration uses
+summary-level published endpoints, not individual patient data. This is a research / educational
+in silico model and is **not** a clinical decision tool.
