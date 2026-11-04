@@ -1,0 +1,8 @@
+scenario,arm,dose_factor,fb_scale,ORR,ORR_lo,ORR_hi,medPFS,nadir_med
+sotorasib 960 QD (reference),sotorasib,1,1,42.6,39.2,46.1,7,85.5
+adagrasib 600 BID (reference),adagrasib,1,1,45.5,42.1,48.8,7.6,81
+"sotorasib, +50% exposure",sotorasib,1.5,1,45.6,42.2,49,7.6,80.9
+"sotorasib, -30% exposure",sotorasib,0.7,1,39.9,36.6,43.2,6.2,89.6
+sotorasib + feedback blocker (fb x0.3),sotorasib,1,0.3,47.1,43.5,50.5,7.9,78.1
+adagrasib + feedback blocker (fb x0.3),adagrasib,1,0.3,48,44.5,51.5,8.7,73.8
+sotorasib +feedback +50% exposure,sotorasib,1.5,0.3,48,44.8,51.6,8.7,73.6

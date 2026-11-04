@@ -39,11 +39,11 @@ if (!is.null(H) && all(is.finite(H))) {
 
 prior_w <- (FIT_UB - FIT_LB)[FIT_PARS]
 post_w  <- 2 * 1.96 * se                       # approx 95% posterior width
-shrink  <- 1 - post_w / prior_w
+shrink  <- pmax(0, pmin(1, 1 - post_w / prior_w))   # 0 = not informed, 1 = fully pinned
 idtab <- data.table(parameter = FIT_PARS, estimate = as.numeric(best),
                     se = se, post95_width = post_w, prior_width = as.numeric(prior_w),
                     shrinkage = shrink,
-                    identified = ifelse(is.na(se), "no",
+                    identified = ifelse(is.na(se) | shrink <= 0.05, "no",
                                  ifelse(shrink > 0.5, "yes", ifelse(shrink > 0.2, "partial", "weak"))))
 setorder(idtab, -shrinkage)
 fwrite(idtab, file.path(DIR_RESULTS, "identifiability.csv"))
