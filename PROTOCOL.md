@@ -116,8 +116,10 @@ Each target is stored with its point value, an approximate uncertainty, and a so
 | 03 | `03_identifiability.R` | prior→posterior shrinkage, profile likelihood, confounded-pair detection |
 | 04 | `04_validate.R` | out-of-sample: leave-one-drug-out and temporal (early-visit→late-visit) prediction |
 | 05 | `05_vpop.R` | virtual population by LHS, accepted against plausible clinical ranges |
+| 05b | `05b_ensemble.R` | parameter-uncertainty ensemble (95% confidence region) propagated into predictions |
 | 06 | `06_insilico_trial.R` | emulate CodeBreaK-200-style head-to-head; ORR, PFS, HR with credible intervals |
 | 07 | `07_sensitivity.R` | global sensitivity (LHS + PRCC) on depth and durability of response |
+| 07b | `07b_structural.R` | structural qualification: refit reduced variants, compare by AIC-like score |
 | 08 | `08_scenarios.R` | schedule and combination scenarios (QD vs BID; +feedback blocker) |
 | 09 | `09_figures.R` | all figures to `figures/` |
 | 10 | `10_tables.R` | all tables + headline numbers to `results/` |
@@ -130,6 +132,11 @@ The model is considered credible only if it **predicts data it was not fit to**:
 3. **External benchmark** — a model-based meta-analytic (MBMA) time-course of ORR across KRAS G12C programs,
    compared against the mechanistic prediction (`scripts/55_benchmarks.R`).
 Pre-specified acceptance: held-out ORR within ±10 percentage points and median PFS within ±1.5 months.
+
+Uncertainty is reported from two sources kept distinct: **patient (trial-to-trial)** variability
+(the virtual population and the in-silico trial bootstrap) and **calibration** uncertainty (the
+parameter ensemble, `05b`). The per-parameter 95% ensemble range is the marginal
+profile-likelihood interval; the full Hessian-based correlation and conditional profiles are in `03`.
 
 ## 7. Outputs
 

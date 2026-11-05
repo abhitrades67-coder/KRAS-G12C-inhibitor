@@ -65,6 +65,20 @@ img("fig08_insilico_hr.png")
 kab(rd("insilico_summary.csv"), caption = "Randomised in silico comparisons (median [95% CrI]).")
 ```
 
+# Parameter (calibration) uncertainty
+
+The virtual-population and in-silico intervals above propagate **patient (trial-to-trial)**
+variability at the point-estimate parameters. Here we also propagate **calibration uncertainty**:
+an approximate 95% joint-confidence-region ensemble of parameter sets (Latin-hypercube over the
+prior box, accepted by the likelihood-ratio threshold `obj_min + qchisq(0.95, n_params)`). The
+per-parameter 95% ensemble range doubles as a marginal profile-likelihood-style interval.
+
+```{r}
+img("fig10_ensemble_params.png"); img("fig11_uncertainty.png")
+kab(rd("ensemble_summary.csv")[, .(quantity, median = round(median,2), lo95 = round(lo95,2), hi95 = round(hi95,2))],
+    caption = "Predictions with parameter uncertainty (ensemble 95% CrI). The hazard ratios are robust; absolute ORR/PFS widen, driven by the weakly-identified resistance parameters.")
+```
+
 # Out-of-sample validation
 
 ```{r}
@@ -83,6 +97,17 @@ notes <- file.path(RES, "identifiability_notes.txt"); if (file.exists(notes)) ca
 ```{r}
 img("fig06_prcc.png")
 kab(rd("sensitivity_prcc.csv"), caption = "Partial rank correlation of outputs on parameters.")
+```
+
+# Structural model qualification
+
+Each mechanism is tested by refitting a reduced variant that disables it and comparing fit by an
+AIC-like score (objective + 2·n_free). A large dAIC when a mechanism is removed means the data
+warrant it.
+
+```{r}
+img("fig12_structural.png")
+kab(rd("structural_comparison.csv"), caption = "Reduced structures refit and compared; dAIC vs the best model.")
 ```
 
 # External benchmark (MBMA)

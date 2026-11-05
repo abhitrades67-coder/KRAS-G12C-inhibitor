@@ -121,4 +121,47 @@ if (have("benchmark_onset.csv")) {
   sv(p, "fig09_benchmark.png", 8, 4.5)
 }
 
+# 10. Ensemble: parameter 95% range as a fraction of the prior (identifiability at a glance) ---
+if (have("ensemble_params.csv")) {
+  e <- fread(file.path(RES, "ensemble_params.csv"))
+  lb <- FIT_LB[e$parameter]; ub <- FIT_UB[e$parameter]
+  e[, `:=`(flo = (ens_lo - lb)/(ub - lb), fhi = (ens_hi - lb)/(ub - lb), fmid = (ens_med - lb)/(ub - lb))]
+  e[, width := fhi - flo]
+  p <- ggplot(e, aes(y = reorder(parameter, -width))) +
+    geom_segment(aes(x = 0, xend = 1, yend = reorder(parameter, -width)), colour = "grey85", linewidth = 3) +
+    geom_segment(aes(x = flo, xend = fhi, yend = reorder(parameter, -width)), colour = "#2c7fb8", linewidth = 3) +
+    geom_point(aes(x = (estimate - lb)/(ub - lb)), colour = "#d95f02", size = 2) +
+    labs(title = "Parameter uncertainty (95% ensemble range within prior)",
+         subtitle = "narrow blue = well identified; near-full bar = weakly identified",
+         x = "position within prior range [0,1]", y = NULL)
+  sv(p, "fig10_ensemble_params.png", 8, 5)
+}
+
+# 11. Ensemble vs point-estimate prediction intervals (two uncertainty sources) ---------
+if (have("ensemble_summary.csv") && have("vpop_summary.csv")) {
+  es <- fread(file.path(RES, "ensemble_summary.csv"))
+  vs <- fread(file.path(RES, "vpop_summary.csv"))
+  orr <- rbind(
+    es[quantity %in% c("soto_ORR","adag_ORR","doce_ORR"),
+       .(arm = sub("_ORR","",quantity), src = "parameter CrI", med = median, lo = lo95, hi = hi95)],
+    vs[, .(arm = c("soto","adag","doce")[match(arm, c("sotorasib","adagrasib","docetaxel"))],
+           src = "patient CrI", med = ORR, lo = ORR_lo, hi = ORR_hi)])
+  p <- ggplot(orr, aes(med, arm, colour = src)) +
+    geom_errorbarh(aes(xmin = lo, xmax = hi), height = .25, position = position_dodge(.4)) +
+    geom_point(position = position_dodge(.4), size = 2) +
+    scale_colour_manual(values = c("parameter CrI" = "#d95f02", "patient CrI" = "#2c7fb8")) +
+    labs(title = "ORR: patient vs parameter uncertainty", x = "ORR (%)", y = NULL, colour = NULL)
+  sv(p, "fig11_uncertainty.png", 8, 3.5)
+}
+
+# 12. Structural model comparison (dAIC) -----------------------------------------------
+if (have("structural_comparison.csv")) {
+  s <- fread(file.path(RES, "structural_comparison.csv"))
+  p <- ggplot(s, aes(dAIC, reorder(model, -dAIC))) +
+    geom_col(fill = "#2c7fb8") + geom_vline(xintercept = c(2,10), linetype = 2, colour = "grey50") +
+    labs(title = "Structural model comparison", subtitle = "dAIC vs best (>2 worse, >10 much worse)",
+         x = "dAIC-like vs best model", y = NULL)
+  sv(p, "fig12_structural.png", 8, 3.5)
+}
+
 cat("Figures written to", FIG, "\n")

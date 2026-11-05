@@ -81,7 +81,10 @@ notes <- c(
  "- kprol and kdeath0 trade off in the net growth rate; only the net rate is informed, so both are",
  "  fixed from natural-history doubling time and only drug/resistance parameters are estimated.",
  "- A full differential-algebra structural analysis is out of scope; practical identifiability is",
- "  assessed here by the Hessian covariance, prior->posterior shrinkage and the objective profiles.")
+ "  assessed here by the Hessian covariance, prior->posterior shrinkage and the objective profiles.",
+ "- Marginal profile-likelihood-style intervals for each parameter are the 95% ensemble ranges in",
+ "  results/ensemble_params.csv (05b); they reveal that some directions (e.g. kcov_soto) are less",
+ "  identified globally than the local Hessian suggests.")
 writeLines(notes, file.path(DIR_RESULTS, "identifiability_notes.txt"))
 cat(paste(notes, collapse = "\n"), "\n")
 cat("\nSaved results/identifiability*.csv, identifiability_notes.txt\n")

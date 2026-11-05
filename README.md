@@ -35,9 +35,11 @@ Rscript run_all.R 05 06      # only steps 05* and 06*
 | 02 | `scripts/02_calibrate.R` | `results/fit.rds`, `calibration_*` (DEoptim + Nelder-Mead fit) |
 | 03 | `scripts/03_identifiability.R` | `results/identifiability*` (shrinkage, correlations, profiles) |
 | 05 | `scripts/05_vpop.R` | `results/vpop_*` (per-patient outcomes, trajectories) |
+| 05b | `scripts/05b_ensemble.R` | `results/ensemble_*` (parameter-uncertainty 95% region, propagated) |
 | 06 | `scripts/06_insilico_trial.R` | `results/insilico_*` (ORR diff, PFS HR with CrI) |
 | 04 | `scripts/04_validate.R` | `results/validation.csv` (leave-one-drug-out, temporal) |
 | 07 | `scripts/07_sensitivity.R` | `results/sensitivity_prcc.csv` (LHS + PRCC) |
+| 07b | `scripts/07b_structural.R` | `results/structural_comparison.csv` (reduced-model AIC comparison) |
 | 55 | `scripts/55_benchmarks.R` | `results/benchmark_*` (MBMA external benchmark) |
 | 08 | `scripts/08_scenarios.R` | `results/scenarios.csv` (dose/schedule/combination) |
 | 09 | `scripts/09_figures.R` | `figures/*.png` |

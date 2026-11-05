@@ -57,6 +57,19 @@ md <- c(md, "## Table 7. Out-of-sample validation", "", tbl(vl), "")
 sc <- rd("scenarios.csv")
 md <- c(md, "## Table 8. Scenario analysis", "", tbl(sc), "")
 
+# 9. Parameter-uncertainty ensemble (predictions with calibration uncertainty)
+es <- rd("ensemble_summary.csv")
+if (!is.null(es)) es <- es[, .(quantity, median = round(median,2), lo95 = round(lo95,2), hi95 = round(hi95,2))]
+md <- c(md, "## Table 9. Predictions with parameter (calibration) uncertainty — ensemble 95% CrI", "", tbl(es), "")
+ep <- rd("ensemble_params.csv")
+if (!is.null(ep)) ep <- ep[, .(parameter, estimate = round(estimate,4), ens_lo = round(ens_lo,4),
+                                ens_med = round(ens_med,4), ens_hi = round(ens_hi,4))]
+md <- c(md, "## Table 10. Parameter 95% ensemble ranges (marginal profile-likelihood-style intervals)", "", tbl(ep), "")
+
+# 11. Structural model comparison
+st <- rd("structural_comparison.csv")
+md <- c(md, "## Table 11. Structural model comparison (dAIC vs best)", "", tbl(st), "")
+
 writeLines(md, file.path(RES, "TABLES.md"))
 
 # headline text
@@ -64,8 +77,12 @@ hl <- c("KRAS G12C QSP — headline numbers", "================================"
 if (!is.null(vs)) for (i in seq_len(nrow(vs)))
   hl <- c(hl, sprintf("%-10s ORR %.1f%% (95%% %.1f-%.1f), median PFS %.1f mo, 12-wk occupancy %.2f",
                       vs$arm[i], vs$ORR[i], vs$ORR_lo[i], vs$ORR_hi[i], vs$medPFS[i], vs$mean_occ84[i]))
-if (!is.null(ins)) { hl <- c(hl, "", "In silico comparisons:");
+if (!is.null(ins)) { hl <- c(hl, "", "In silico comparisons (patient CrI):");
   for (i in seq_len(nrow(ins))) hl <- c(hl, sprintf("  %s: HR %s", ins$comparison[i], ins$HR[i])) }
+es2 <- rd("ensemble_summary.csv")
+if (!is.null(es2)) { hl <- c(hl, "", "With parameter (calibration) uncertainty (ensemble 95% CrI):")
+  for (q in c("HR_soto_doce","HR_adag_doce")) { r <- es2[quantity == q]
+    if (nrow(r)) hl <- c(hl, sprintf("  %s: HR %.2f [%.2f, %.2f]", q, r$median, r$lo95, r$hi95)) } }
 writeLines(hl, file.path(RES, "headline.txt"))
 cat(paste(hl, collapse = "\n"), "\n")
 cat("\nSaved results/TABLES.md and results/headline.txt\n")
