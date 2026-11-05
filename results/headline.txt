@@ -4,7 +4,11 @@ sotorasib  ORR 41.6% (95% 38.6-44.5), median PFS 6.3 mo, 12-wk occupancy 0.88
 adagrasib  ORR 44.4% (95% 41.3-47.5), median PFS 6.9 mo, 12-wk occupancy 0.91
 docetaxel  ORR 24.5% (95% 22.1-27.1), median PFS 3.2 mo, 12-wk occupancy 0.00
 
-In silico comparisons:
+In silico comparisons (patient CrI):
   sotorasib vs docetaxel: HR 0.69 [0.56, 0.85]
   adagrasib vs docetaxel: HR 0.68 [0.55, 0.83]
   sotorasib vs adagrasib: HR 1.01 [0.83, 1.25]
+
+With parameter (calibration) uncertainty (ensemble 95% CrI):
+  HR_soto_doce: HR 0.69 [0.55, 0.91]
+  HR_adag_doce: HR 0.66 [0.51, 0.89]

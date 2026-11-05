@@ -1,6 +1,6 @@
 # KRAS G12C QSP — results tables
 
-_Generated 2026-11-04 23:09 UTC._
+_Generated 2026-11-05 02:16 UTC._
 
 ## Table 1. Calibration: model vs published anchors
 
@@ -104,4 +104,43 @@ _Generated 2026-11-04 23:09 UTC._
 | sotorasib + feedback blocker (fb x0.3) | sotorasib | 1.0 | 0.3 | 47.1 | 43.5 | 50.5 | 7.9 | 78.1 |
 | adagrasib + feedback blocker (fb x0.3) | adagrasib | 1.0 | 0.3 | 48.0 | 44.5 | 51.5 | 8.7 | 73.8 |
 | sotorasib +feedback +50% exposure | sotorasib | 1.5 | 0.3 | 48.0 | 44.8 | 51.6 | 8.7 | 73.6 |
+
+## Table 9. Predictions with parameter (calibration) uncertainty — ensemble 95% CrI
+
+| quantity | median | lo95 | hi95 |
+| --- | --- | --- | --- |
+| soto_ORR | 40.00 | 30.85 | 52.79 |
+| soto_PFS |  4.31 |  2.63 | 10.45 |
+| adag_ORR | 41.50 | 32.06 | 55.08 |
+| adag_PFS |  4.63 |  3.05 | 11.89 |
+| doce_ORR | 25.50 | 17.39 | 38.29 |
+| doce_PFS |  2.82 |  1.72 |  3.85 |
+| HR_soto_doce |  0.69 |  0.55 |  0.91 |
+| HR_adag_doce |  0.66 |  0.51 |  0.89 |
+
+## Table 10. Parameter 95% ensemble ranges (marginal profile-likelihood-style intervals)
+
+| parameter | estimate | ens_lo | ens_med | ens_hi |
+| --- | --- | --- | --- | --- |
+| fb |  2.600 | 0.2633 |  1.9184 |  3.8510 |
+| kprog |  0.007 | 0.0056 |  0.0392 |  0.0757 |
+| kcov_soto | 14.825 | 4.1113 | 19.8992 | 37.1705 |
+| kcov_adag | 22.000 | 3.9407 | 29.0831 | 56.4508 |
+| kkill |  0.032 | 0.0177 |  0.0486 |  0.1041 |
+| dep |  0.330 | 0.1574 |  0.3402 |  0.8901 |
+| bypass |  0.850 | 0.5324 |  0.8390 |  0.9710 |
+| fr0 |  0.300 | 0.0247 |  0.1738 |  0.2954 |
+| kres |  0.004 | 0.0027 |  0.0121 |  0.0197 |
+| kkill_doce |  0.009 | 0.0025 |  0.0132 |  0.0317 |
+| kprog_doce |  0.016 | 0.0085 |  0.0349 |  0.0491 |
+
+## Table 11. Structural model comparison (dAIC vs best)
+
+| model | n_free | objective | AIC_like | soto_ORR | soto_PFS | adag_ORR | adag_PFS | doce_ORR | doce_PFS | dAIC |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| full model | 11 | 3.66 | 25.66 | 39.8 | 6.2 | 43.0 | 6.8 | 22.8 | 3.2 | 0.00 |
+| no feedback & no acquired res |  9 | 7.97 | 25.97 | 43.8 | 5.7 | 44.2 | 6.1 | 30.0 | 4.3 | 0.31 |
+| no pre-existing resistance (fr0~0) | 10 | 6.61 | 26.61 | 39.2 | 5.1 | 43.0 | 5.9 | 26.5 | 3.9 | 0.95 |
+| no adaptive feedback (fb=0) | 10 | 6.93 | 26.93 | 42.8 | 5.7 | 43.5 | 5.9 | 28.5 | 3.9 | 1.27 |
+| no acquired resistance (kprog=0) | 10 | 7.85 | 27.85 | 44.0 | 7.7 | 46.5 | 8.1 | 23.2 | 3.1 | 2.19 |
 

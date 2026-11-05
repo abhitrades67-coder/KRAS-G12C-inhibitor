@@ -1,0 +1,6 @@
+model,n_free,objective,AIC_like,soto_ORR,soto_PFS,adag_ORR,adag_PFS,doce_ORR,doce_PFS,dAIC
+full model,11,3.66,25.66,39.8,6.2,43,6.8,22.8,3.2,0
+no feedback & no acquired res,9,7.97,25.97,43.8,5.7,44.2,6.1,30,4.3,0.31
+no pre-existing resistance (fr0~0),10,6.61,26.61,39.2,5.1,43,5.9,26.5,3.9,0.95
+no adaptive feedback (fb=0),10,6.93,26.93,42.8,5.7,43.5,5.9,28.5,3.9,1.27
+no acquired resistance (kprog=0),10,7.85,27.85,44,7.7,46.5,8.1,23.2,3.1,2.19
